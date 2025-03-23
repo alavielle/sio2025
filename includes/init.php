@@ -21,16 +21,7 @@ $pdo = new PDO(
     )
 );
 
-// Connexion BDD en ligne
-// $pdo = new PDO(
-//     'mysql:host=laan6484; charset=utf8;dbname=laan6484_questionnaires',
-//     'laan6484_laan6484',
-//     'BzIrnl=0ky@d',
-//     array(
-//         PDO::ATTR_ERRMODE => PDO::ERRMODE_SILENT, 
-//         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-//     )
-// );
+
 
 // Inclusion des fonctions du site
 require_once('functions.php');
