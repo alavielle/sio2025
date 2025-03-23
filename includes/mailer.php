@@ -20,15 +20,15 @@ function envoiMail($email, $nom, $sujet, $message){
         //Server settings
         $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
         $mail->isSMTP();                                            //Send using SMTP
-        $mail->Host       = 'mail.alcedi.fr';                     //Set the SMTP server to send through
+        $mail->Host       = '';                     //Set the SMTP server to send through
         $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
-        $mail->Username   = 'automate@alcedi.fr';                     //SMTP username
-        $mail->Password   = 'tpGl+taD?W';                               //SMTP password
+        $mail->Username   = '';                     //SMTP username
+        $mail->Password   = '';                               //SMTP password
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
         $mail->Port       = 465;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
 
         //Recipients
-        $mail->setFrom('no-reply@starquest.alcedi.fr', 'Mailer');
+        $mail->setFrom('', 'Mailer');
         $mail->addAddress($email, $nom);     //Add a recipient
 
         //Content
