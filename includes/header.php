@@ -73,19 +73,17 @@
                         <?php endif; ?>
 
                         <?php if (isConnected()) : ?>
-                            <?php if (isSelfCreated() | isAdmin()) : ?>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="sousmenu" role='button' data-bs-toggle="dropdown">Mon compte </a>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="<?php echo URL ?>user_index.php">Mes questionnaires</a></li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="sousmenu" role='button' data-bs-toggle="dropdown">Mon compte </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="<?php echo URL ?>user_index.php">Mes questionnaires</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo URL ?>user_stat.php">Statistiques</a></li>
+                                    <?php if (isSelfCreated() | isAdmin()) : ?>
                                         <li><a class="dropdown-item" href="<?php echo URL ?>profil.php">Mon profil</a></li>
-                                    </ul>
-                                </li>
-                            <?php else : ?>
-                                <li class="nav-item">
-                                <li><a class="nav-link" href="<?php echo URL ?>user_index.php">Mes questionnaires</a></li>
-                                </li>
-                            <?php endif ?>
+                                    <?php else : ?>
+                                    <?php endif ?>
+                                </ul>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="<?php echo URL ?>index.php?action=logout"><i class="fas fa-power-off"></i></a>
                             </li>
