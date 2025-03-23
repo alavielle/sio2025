@@ -1,0 +1,78 @@
+:root{
+    scroll-behavior: auto; /* smooth avec bootstrap*/
+}
+
+html{
+    min-height: 100vh;
+    position: relative;
+}
+
+main{
+    padding: 56px 0;
+}
+
+footer{
+    position: absolute;
+    bottom: 0;
+}
+h2{
+    padding-top: 10px;
+}
+
+.hidden{
+    display: none;
+}
+
+.user_color{
+    color:#5735cc;
+}
+
+.list-group-item.active{
+    background: #6c757d;
+    border:#6c757d;
+}
+.header-img{
+    margin-top: 56px;
+    height: 500px;
+    background-position: center 20%;
+    background-size: cover;
+}
+
+.header-img h1, .header-img h2{
+    background: rgba(0, 0, 0, 0.2);
+}
+
+#preview a{
+    position: absolute;
+    top: 0;
+    right: 50%;
+}
+
+#preview:hover{
+    cursor: pointer;
+}
+
+figure{
+    height: 500px;
+}
+
+.illustration{
+    height: 50%;
+    background-repeat: no-repeat;
+    background-position: center top;
+    background-size: cover;
+}
+figure a{
+    bottom: 15px;
+    right: 15px;
+}
+
+.contenu{
+    text-align: justify;
+}
+
+/* @media (max-width: 600px) {
+    .contenu{
+        text-align: left;
+    }
+  } */
