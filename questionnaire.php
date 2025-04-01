@@ -27,7 +27,7 @@ require_once('includes/header.php');
 <div class="row" id="question">
     <div class="col-md-9">
         <?php if (!empty($questionnaire)) : ?>
-            <h1><?php echo $questionnaire['libelle'] ?></h1>
+            <h3><?php echo $questionnaire['libelle'] ?></h3>
             <hr>
             <div class="col-md-9 order-1 order-md-0">
                 <form method="post" class="ms-5" id="form">

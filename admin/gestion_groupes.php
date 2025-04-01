@@ -62,7 +62,7 @@ require_once('../includes/header.php');
 <div class="container">
     <div class="row justify-content-center">
         <div class="col">
-            <h1>Groupes</h1>
+            <h3>Groupes</h3>
             <hr class="my-3">
             <?php if ($groupes->rowCount() > 0) : ?>
                 <?php while ($groupe = $groupes->fetch()) : ?>

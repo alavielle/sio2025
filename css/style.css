@@ -27,6 +27,38 @@ h2{
     color:#5735cc;
 }
 
+.btn-violet:hover{
+    color: #fff;
+    background-color: #5735cc;
+    border-color: #5735cc;
+}
+.btn-violet {
+    color: #5735cc;
+    background-color: #fff;
+    border-color: #5735cc;
+}
+
+.btn-orange:hover{
+    color: #fff;
+    background-color: #ffa407;
+    border-color: #ffa407;
+}
+.btn-orange {
+    color: #ffa407;
+    background-color: #fff;
+    border-color: #ffa407;
+}
+.btn-in-orange{
+    color: #fff;
+    background-color: #ffa407;
+    border-color: #ffa407;
+}
+.btn-in-orange:hover {
+    color: #ffa407;
+    background-color: #fff;
+    border-color: #ffa407;
+}
+
 .list-group-item.active{
     background: #6c757d;
     border:#6c757d;
@@ -76,6 +108,56 @@ figure a{
     text-decoration: none;
     font-weight: bolder;
 }
+
+
+@page {
+    size: A4 portrait;
+    margin: 2cm 1.3cm 2cm 1.3cm;
+}
+
+#from {
+    position: absolute;
+    top: -0.5cm;
+    left: 0.2cm;
+}
+
+#to {
+    position: absolute;
+    top: 2.5cm;
+    left: 9.7cm;
+    width: 7cm;
+    height: 2cm;
+}
+
+#date-att {
+    position: absolute;
+    top: 6cm;
+    right: 0.2cm;
+    text-align: right;
+}
+
+#obj {
+    padding-bottom: 0.8cm;
+    text-indent: 0;
+}
+
+#msg {
+    margin-top: 9.4cm;
+    text-align: justify;
+    line-height: 1.3;
+    text-indent: 1cm;
+}
+
+#sig {
+    padding-top: 2cm;
+    padding-right: 4cm;
+    text-align: right;
+}
+
+.no-ident {
+    text-indent: 0;
+}
+
 /* @media (max-width: 600px) {
     .contenu{
         text-align: left;

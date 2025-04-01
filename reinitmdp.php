@@ -43,7 +43,7 @@ require_once('includes/header.php');
 ?>
 <div class="row justify-content-center">
     <div class="col-md-8 col-xl-4 border border-dark p-5 rounded">
-        <h1>Oubli du mot de passe</h1>
+        <h3>Oubli du mot de passe</h3>
         <hr class="mb-3">
         <form method="post">
             <div class="mb-3">
@@ -51,7 +51,7 @@ require_once('includes/header.php');
                 <input type="email" id="email" name="email" class="form-control">
             </div>
 
-            <button type="submit" class="btn btn-warning">Recevoir un lien de réinitialisation</button>
+            <button type="submit" class="btn btn-orange">Recevoir un lien de réinitialisation</button>
             <a href="<?php echo URL ?>index.php" class="btn btn-secondary">Retour</a>
         </form>
     </div>

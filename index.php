@@ -50,7 +50,7 @@ if (!empty($_POST)) {
         if ($user) {
             if (password_verify($_POST['password'], $user['password'])) {
                 $_SESSION['user'] = $user;
-                add_flash('Connexion réussie', 'success');
+                //add_flash('Connexion réussie', 'success');
                 header('location:' . URL . 'accueil.php');
                 exit();
             } else {
@@ -67,7 +67,7 @@ require_once('includes/header.php');
 ?>
 <div class="row justify-content-center">
     <div class="col-md-8 col-xl-4 border border-dark p-5 rounded">
-        <h1>Connexion</h1>
+        <h3>Connexion</h3>
         <hr class="mb-3">
         <form method="post">
             <div class="mb-3">

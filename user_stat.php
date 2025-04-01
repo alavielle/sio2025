@@ -15,7 +15,7 @@ require_once('includes/header.php');
 
 ?>
 <div class="row" >
-    <h1>Statistiques</h1>
+    <h3>Statistiques</h3>
 
     <div class="col-md-3 my-3">
         <select class="form-select" name="questionnaire" id="questionnaire">

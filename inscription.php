@@ -80,7 +80,7 @@ require_once('includes/header.php');
 ?>
 <div class="row justify-content-center">
     <div class="col-md-8 col-xl-4 border border-dark p-5 rounded">
-        <h1>Inscription</h1>
+        <h3>Inscription</h3>
         <hr class="mb-3">
         <form method="post">
             <div class="mb-3">

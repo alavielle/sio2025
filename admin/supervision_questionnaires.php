@@ -42,7 +42,7 @@ require_once('../includes/header.php');
 
 
 <div class="row" id="questionnaires">
-    <h1>Réponses par questionnaires</h1>
+    <h3>Réponses par questionnaires</h3>
     <div class="col-md-7 order-1 order-md-0">
         <?php if ($questionnaires->rowCount() > 0) : ?>
             <?php while ($questionnnaire = $questionnaires->fetch()) : ?>
@@ -78,7 +78,7 @@ require_once('../includes/header.php');
                                                 $total = sql($sqlTotal)->fetch(); ?>
                                                 <div class="row">
                                                     <?php while ($score = $scores->fetch()) : ?>
-                                                        <div class="col-md-1 col-sm-3 text-center">
+                                                        <div class="col-md-2 col-sm-3 text-center">
                                                             <h5><a href="../user_questionnaire.php?questionnaire=<?php echo $questionnnaire['id_quest'] . "&amp;id_user=" . $utilisateur['id'] . "&amp;date=" . $score['date'] . "&" .  uniqid() .  uniqid() ?>
                                                         " class="align-self-end mt-3 text-decoration-none" id="lien_questionnaire" data-bs-toggle="tooltip" data-bs-html="true" data-bs-placement="bottom" title="<?php $date = date_create($score['date']);
                                                                                                                                                                                                                     echo date_format($date, 'd/m/Y H:i'); ?> - Voir le détail"><?php echo $score['score'] ?>/<?php echo $total['total'] ?></a></h5>

@@ -98,52 +98,78 @@ if (!empty($_POST)) {
     // Formulaire de mail soumis
     if (isset($_POST['envoi_mail'])) {
         if (!empty($_POST['destinataire'])) {
-            $user = sql("SELECT * FROM users WHERE email=:email", array(
-                'email' => $_POST['destinataire']
-            ));
-            if ($user->rowCount() > 0) {
+            if (str_contains($_POST['destinataire'], "@")) {
+                $users = sql("SELECT * FROM users WHERE email=:email", array(
+                    'email' => $_POST['destinataire']
+                ));
+            } else {
+                $requete = "select distinct users.* , groupes.libelle from users left join groupes on groupes.id = users.id_groupe";
+
+                $params = array();
+                // Tenir compte d'un éventuel filtre sur le groupe ou le questionnaire
+                if (isset($_GET['groupe']) && is_numeric($_GET['groupe']) && !isset($_GET['questionnaire'])) {
+                    $requete .= ' WHERE groupes.id = :id_groupe';
+                    $params['id_groupe'] = $_GET['groupe'];
+                }
+                if (isset($_GET['questionnaire']) && is_numeric($_GET['questionnaire']) && !isset($_GET['groupe'])) {
+                    $requete .= ' inner join reponses_utilisateur on reponses_utilisateur.id_utilisateur = users.id
+                    inner join questions on questions.id = reponses_utilisateur.id_question
+                    WHERE questions.id_questionnaire = :id_quest';
+                    $params['id_quest'] = $_GET['questionnaire'];
+                }
+
+                $requete .= " order by users.prenom";
+                $users = sql($requete, $params);
+            }
+            $nb_users = $users->rowCount();
+            if ($users->rowCount() > 0) {
                 // génération du mail
-                $infosuser = $user->fetch();
-                $destinataire = $infosuser['email'];
-                $prenom = $infosuser['prenom'];
-                if (!empty($_POST['id_mail']) && $_POST['id_mail'] > 0 && !empty($_POST['contenu'])) {
-                    $id_mail = $_POST['id_mail']; //mail d'envoi du lien
-                    $contenu = $_POST['contenu'];
-                    $sujet = $_POST['title'];
-                    $expiration = time() + 60 * 60 * 24 * 10;
-                    $token = str_repeat(uniqid(), 3);
-                    sql("UPDATE users SET token=:token, expiration=:expiration WHERE id=:id", array(
-                        'token' => $token,
-                        'expiration' => $expiration,
-                        'id' => $infosuser['id']
-                    ));
-                    if ($id_mail > 0) {
-                        sql("UPDATE mails SET title=:title, contenu=:contenu WHERE id=:id_mail", array(
+                while ($user = $users->fetch()) {
+
+                    $destinataire = $user['email'];
+                    $prenom = $user['prenom'];
+                    if (!empty($_POST['id_mail']) && $_POST['id_mail'] > 0 && !empty($_POST['contenu'])) {
+                        $id_mail = $_POST['id_mail']; //mail d'envoi du lien
+                        $contenu = $_POST['contenu'];
+                        $sujet = $_POST['title'];
+                        $expiration = time() + 60 * 60 * 24 * 10;
+                        $token = str_repeat(uniqid(), 3);
+                        sql("UPDATE users SET token=:token, expiration=:expiration WHERE id=:id", array(
+                            'token' => $token,
+                            'expiration' => $expiration,
+                            'id' => $user['id']
+                        ));
+                        if ($id_mail > 0) {
+                            sql("UPDATE mails SET title=:title, contenu=:contenu WHERE id=:id_mail", array(
+                                'title' => $sujet,
+                                'contenu' => $contenu,
+                                'id_mail' => $id_mail
+                            ));
+                        } else {
+                            sql("INSERT INTO mails (title, contenu) VALUES (:title, :contenu)", array(
+                                'title' => $sujet,
+                                'contenu' => $contenu
+                            ));
+                        }
+
+                        $lien = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . URL . 'index.php?email=' . $user['email'] . '&token=' . $token;
+                        $contenu = str_replace('%prenom%', $prenom, $contenu);
+                        $contenu = str_replace('%lien%', $lien, $contenu);
+                        //envoiMail($destinataire, $nom, $sujet, $contenu);
+                        sql("INSERT INTO histo_mails (id_user ,title, contenu,  date) VALUES (:id_user, :title, :contenu, :date)", array(
                             'title' => $sujet,
                             'contenu' => $contenu,
-                            'id_mail' => $id_mail
-                        ));
-                    } else {
-                        sql("INSERT INTO mails (title, contenu) VALUES (:title, :contenu)", array(
-                            'title' => $sujet,
-                            'contenu' => $contenu
+                            'id_user' => $user['id'],
+                            'date' => date("Y-m-d H:i:s")
                         ));
                     }
-
-                    $lien = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . URL . 'index.php?email=' . $infosuser['email'] . '&token=' . $token;
-                    $contenu = str_replace('%prenom%', $prenom, $contenu);
-                    $contenu = str_replace('%lien%', $lien, $contenu);
-                    //envoiMail($destinataire, $nom, $sujet, $contenu);
-                    sql("INSERT INTO histo_mails (id_user ,title, contenu,  date) VALUES (:id_user, :title, :contenu, :date)", array(
-                        'title' => $sujet,
-                        'contenu' => $contenu,
-                        'id_user' => $infosuser['id'],
-                        'date' => date("Y-m-d H:i:s")
-                    ));
+                }
+                if ($nb_users > 1) {
+                    add_flash($nb_users . " mails ont été envoyés", 'info');
+                } else {
+                    add_flash("Le mail a été envoyé", 'info');
                 }
             }
-
-            add_flash("Le mail a été envoyé", 'info');
             echo ($contenu);
             //header('location:' . $_SERVER['PHP_SELF']);
             exit();
@@ -154,21 +180,78 @@ if (!empty($_POST)) {
 }
 
 
-$groupes = sql("select groupes.* from groupes order by groupes.libelle");
+$groupes = sql("select groupes.* from groupes  order by groupes.libelle");
+$questionnaires = sql("select questionnaires.* from questionnaires  order by questionnaires.libelle");
 
-$users = sql("select users.* , groupes.libelle
-from users
-left join groupes on groupes.id = users.id_groupe order by users.prenom");
+$requete = "select distinct users.* , groupes.libelle
+from users left join groupes on groupes.id = users.id_groupe";
+
+$params = array();
+// Tenir compte d'un éventuel filtre sur le groupe ou le questionnaire
+if (isset($_GET['groupe']) && is_numeric($_GET['groupe']) && !isset($_GET['questionnaire'])) {
+    $requete .= ' WHERE groupes.id = :id_groupe';
+    $params['id_groupe'] = $_GET['groupe'];
+}
+if (isset($_GET['questionnaire']) && is_numeric($_GET['questionnaire']) && !isset($_GET['groupe'])) {
+    $requete .= ' inner join reponses_utilisateur on reponses_utilisateur.id_utilisateur = users.id
+        inner join questions on questions.id = reponses_utilisateur.id_question
+        WHERE questions.id_questionnaire = :id_quest';
+    $params['id_quest'] = $_GET['questionnaire'];
+}
+if (isset($_GET['groupe']) && isset($_GET['questionnaire'])) {
+    if (is_numeric($_GET['questionnaire']) && is_numeric($_GET['groupe'])) {
+        $requete .= ' inner join reponses_utilisateur on reponses_utilisateur.id_utilisateur = users.id
+        inner join questions on questions.id = reponses_utilisateur.id_question
+        WHERE questions.id_questionnaire = :id_quest AND groupes.id = :id_groupe';
+        $params['id_quest'] = $_GET['questionnaire'];
+        $params['id_groupe'] = $_GET['groupe'];
+    }
+}
+
+$requete .= " order by users.prenom";
+$users = sql($requete, $params);
 
 $title = "Gestion des utilisateurs";
 $subtitle = "Admin";
 require_once('../includes/header.php');
 ?>
 
-
 <div class="row ">
-    <h1>Utilisateurs</h1>
+    <div class="col-md-2">
+        <h3>Utilisateurs</h3>
+    </div>
+    <div class="col-md-2">
+        <?php if ($groupes->rowCount() > 0) : ?>
+            <select class="form-select" onChange="location.href=this.value;" id="select_groupe">
+                <option value="<?php echo $_SERVER['PHP_SELF'] ?>">Choisir le groupe</option>
+                <?php while ($groupe = $groupes->fetch()) : ?>
+                    <option value="?groupe=<?php echo $groupe['id'] ?>" <?php if (isset($_GET['groupe']) && $_GET['groupe'] == $groupe['id']) echo 'selected' ?>><?php echo $groupe['libelle'] ?></option>
+                <?php endwhile ?>
+            </select>
+        <?php endif ?>
+    </div>
+    <div class="col-md-2">
+        <?php if ($questionnaires->rowCount() > 0) : ?>
+            <select class="form-select" onChange="location.href=this.value;" id="select_quest">
+                <option value="<?php echo $_SERVER['PHP_SELF'] ?>">Choisir l'évaluation</option>
+                <?php while ($questionnaire = $questionnaires->fetch()) : ?>
+                    <option value="?questionnaire=<?php echo $questionnaire['id'] ?>" <?php if (isset($_GET['questionnaire']) && $_GET['questionnaire'] == $questionnaire['id']) echo 'selected' ?>><?php echo $questionnaire['libelle'] ?></option>
+                <?php endwhile ?>
+            </select>
+        <?php endif ?>
+    </div>
+    <div class="col-md-2 text-center">
+        <a class="btn btn-orange" target="_blank" href="<?php echo "appel.php" ?><?php if (isset($_GET['groupe']) && is_numeric($_GET['groupe'])) echo "?groupe=" . $_GET['groupe'] ?><?php if (isset($_GET['questionnaire']) && is_numeric($_GET['questionnaire'])) echo "?questionnaire=" . $_GET['questionnaire'] ?>"><i class="fas fa-file-signature me-2"></i>Fiche d'appel</a>
+    </div>
+    <div class="col-md-2 text-center">
+        <a class="btn btn-violet" target="_blank" href="<?php echo "attestation.php" ?><?php if (isset($_GET['groupe']) && is_numeric($_GET['groupe'])) echo "?groupe=" . $_GET['groupe'] ?><?php if (isset($_GET['questionnaire']) && is_numeric($_GET['questionnaire'])) echo "?questionnaire=" . $_GET['questionnaire'] ?>"><i class="fas fa-file-contract me-2"></i>Attestations</a>
+    </div>
+    <div class="col-md-2 text-center">
+        <button data-bs-toggle="modal" data-bs-target="#modal_mail" class="btn btn-outline-primary" name="mail_groupe"><i class="fas fa-envelope me-2"></i>Mail groupé</button>
+    </div>
     <hr class="my-3">
+</div>
+<div class="row ">
     <div class="col-md-2 mb-3">
         Email
     </div>
@@ -188,9 +271,9 @@ require_once('../includes/header.php');
         Actions
     </div>
 </div>
-<?php if ($users->rowCount() > 0) :
-    while ($user = $users->fetch()) : ?>
-        <form method="post" class="row mb-3">
+<form method="post" class="row mb-3">
+    <?php if ($users->rowCount() > 0) :
+        while ($user = $users->fetch()) : ?>
             <input type="hidden" name="id" value="<?php echo $user['id'] ?>">
             <div class="col-md-2 mb-3">
                 <input type="text" name="email" class="form-control" value="<?php echo $user['email'] ?>">
@@ -224,13 +307,16 @@ require_once('../includes/header.php');
                 </select>
             </div>
             <div class="col-md-auto mb-3">
-                <button type="submit" name="update" class="btn btn-outline-success">
+                <button type="submit" name="update" class="btn btn-outline-success" data-bs-placement="bottom" title="Valider les modifications">
                     <i class="fa fa-check"></i>
                 </button>
-                <button type="button" data-bs-toggle="modal" data-bs-target="#modal_mail" name="prepa_mail" class="btn btn-outline-primary" data-index="<?php echo $user['email'] ?>">
-                    <i class="far fa-envelope"></i>
+                <a href="attestation.php?id=<?php echo $user['id']  ?>" target="_blank" class="btn btn-violet" data-bs-placement="bottom" title="Attestation">
+                    <i class="fas fa-file-contract"></i>
+                </a>
+                <button type="button" data-bs-toggle="modal" data-bs-target="#modal_mail" name="prepa_mail" class="btn btn-outline-primary" data-index="<?php echo $user['email'] ?>" data-bs-placement="bottom" title="Envoyer un mail">
+                    <i class="fas fa-envelope"></i>
                 </button>
-                <a href="?action=delete&id=<?php echo $user['id']  ?>" class="btn btn-outline-danger confirm">
+                <a href="?action=delete&id=<?php echo $user['id']  ?>" class="btn btn-outline-danger confirm" data-bs-placement="bottom" title="Supprimer l'utilisateur">
                     <i class="fa fa-trash"></i>
                 </a>
             </div>
@@ -299,31 +385,39 @@ require_once('../includes/header.php');
                     </p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-orange" data-bs-dismiss="modal">Close</button>
                     <button type="submit" name="envoi_mail" class="btn btn-secondary">Envoyer</button>
                 </div>
             </div>
         </div>
     </div>
 
-        </form>
+</form>
 
-        <script>
-            $('input[name="droits"]').change(function(e) {
-                if ($(this).is(":checked")) {
-                    $(this).next('label').removeClass('text-muted');
-                } else {
-                    console.log($(this).next('span'));
-                    $(this).next('label').addClass('text-muted');
-                }
-            });
-            $('button[name=prepa_mail]').click(function() {
-                $('#destinataire').val($(this).attr('data-index'));
-            });
-        </script>
+<script>
+    $('input[name="droits"]').change(function(e) {
+        if ($(this).is(":checked")) {
+            $(this).next('label').removeClass('text-muted');
+        } else {
+            console.log($(this).next('span'));
+            $(this).next('label').addClass('text-muted');
+        }
+    });
+    $('button[name=prepa_mail]').click(function() {
+        $('#destinataire').val($(this).attr('data-index'));
+    });
+    $('button[name=mail_groupe]').click(function() {
+        if ($('#select_groupe option:selected').text() != "Choisir le groupe") {
+            $('#destinataire').val($('#select_groupe option:selected').text());
+        }
+        if ($('#select_quest option:selected').text() != "Choisir l'évaluation") {
+            $('#destinataire').val($('#select_quest option:selected').text());
+        }
+    });
+</script>
 
-        <!-- script page -->
-        <script src="<?php echo URL ?>js/mail.js"></script>
+<!-- script page -->
+<script src="<?php echo URL ?>js/mail.js"></script>
 
-        <?php
-        require_once('../includes/footer.php');
+<?php
+require_once('../includes/footer.php');

@@ -75,7 +75,7 @@ require_once('includes/header.php');
 <!-- Formulaire avec les champs nouveau mot de passe et confirmation -->
 <div class="row justify-content-center">
     <div class="col-md-8 col-xl-4 border border-dark p-5 rounded">
-        <h1>Réinitialisation du mot de passe</h1>
+        <h3>Réinitialisation du mot de passe</h3>
         <hr class="mb-3">
         <form method="post">
             <div class="mb-3">

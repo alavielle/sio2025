@@ -30,21 +30,27 @@ require_once('includes/header.php');
 
 ?>
 <div class="row" id="questionnaires">
-        <h1>Questionnaires proposés</h1>
+    <h3>Evaluations</h3>
     <div class="col-md-9 order-1 order-md-0">
-        <div class="col-md-9 order-1 order-md-0">
-            <?php if ($questionnaires->rowCount() > 0) : ?>
-                <?php while ($questionnnaire = $questionnaires->fetch()) : ?>
-                    <hr>
-                    <h5><a href="questionnaire.php?questionnaire=<?php echo $questionnnaire['id']."&".  uniqid().  uniqid()?>" class="align-self-end mt-3 text-decoration-none" id="lien_questionnaire"><?php echo $questionnnaire['libelle'] ?></a></h5>
-                    <input type="text" name="id_questionnaire<?php echo $questionnnaire['id'] ?>" id="id_questionnaire<?php echo $questionnnaire['id'] ?>" value="<?php echo $questionnnaire['id'] ?>" hidden>
-                    <p class="ms-5 fst-italic"><?php echo $questionnnaire['categorie'] ?></p>
-                <?php endwhile ?>
-
-            <?php else : ?>
-                <div class="alert alert-info">Pas de questionnaire dans cette catégorie</div>
-            <?php endif ?>
-        </div>
+        <?php if ($questionnaires->rowCount() > 0) : ?>
+            <?php while ($questionnnaire = $questionnaires->fetch()) : ?>
+                <hr>
+                <div class="row">
+                    <div class="col">
+                        <h5><a href="questionnaire.php?questionnaire=<?php echo $questionnaire['id'] . "&" .  uniqid() .  uniqid() ?>" class="align-self-end mt-3 text-decoration-none" id="lien_questionnaire"><?php echo $questionnaire['libelle'] ?></a></h5>
+                        <input type="text" name="id_questionnaire<?php echo $questionnaire['id'] ?>" id="id_questionnaire<?php echo $questionnaire['id'] ?>" value="<?php echo $questionnaire['id'] ?>" hidden>
+                        <p class="ms-5 fst-italic"><?php echo $questionnaire['categorie'] ?></p>
+                    </div>
+                    <div class="col-auto order-2 order-md-1 align-self-center">
+                        <?php if (!empty($questionnaire['support'])) : ?>
+                            <a class="btn btn-in-orange" href="<?php echo UPLOAD_PATH . $questionnaire['support'] ?>" data-bs-placement="bottom" title="Télécharger">Télécharger le support de formation</a>
+                        <?php endif ?>
+                    </div>
+                </div>
+            <?php endwhile ?>
+        <?php else : ?>
+            <div class="alert alert-info">Pas de questionnaire dans cette catégorie</div>
+        <?php endif ?>
     </div>
     <?php if ($categories->rowCount() > 0) : ?>
         <aside class="col-md-3 order-0 order-md-1 border-start border-dark">

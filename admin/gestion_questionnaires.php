@@ -65,7 +65,7 @@ require_once('../includes/header.php');
 ?>
 <div class="container">
     <div class="row justify-content-center">
-        <h1>Questionnaires</h1>
+        <h3>Questionnaires</h3>
         <hr class="mb-3">
         <?php if ($questionnaires->rowCount() > 0) : ?>
             <?php while ($questionnaire = $questionnaires->fetch()) : ?>

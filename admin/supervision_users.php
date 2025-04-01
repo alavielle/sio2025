@@ -30,7 +30,7 @@ require_once('../includes/header.php');
 
 
 <div class="row" id="questionnaires">
-    <h1>Réponses par utilisateurs</h1>
+    <h3>Réponses par utilisateurs</h3>
     <div class="col-md-9 order-1 order-md-0">
         <?php if ($users->rowCount() > 0) : ?>
             <?php while ($user = $users->fetch()) : ?>

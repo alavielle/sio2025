@@ -25,7 +25,7 @@ require_once('includes/header.php');
 
 ?>
 <div class="row" id="questionnaires">
-    <h1>Vos questionnaires</h1>
+    <h3>Vos questionnaires</h3>
     <div class="col-md-6">
     </div>
     <div class="col-md-3 text-center">

@@ -54,7 +54,7 @@ require_once('includes/header.php');
 ?>
 <div class="row" id="questionnaires">
     <div class="col-md-9">
-        <h1 class="text-center mb-5"><?php echo $title ?></h1>
+        <h1 class="text-center mb-5"><?php echo $title ?></h3>
     </div>
     <div class="col-md-3 pt-3 text-end user_color">
         <h5><?php echo $theUser ?></h5><h6><?php echo $date ?></h6>

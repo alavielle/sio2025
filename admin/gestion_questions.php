@@ -13,7 +13,6 @@ if (isset($_GET['questionnaire']) && is_numeric($_GET['questionnaire'])) {
         'id' => $_GET['questionnaire']
     ));
     $questionnaire = $questionnaires->fetch();
-    $chemin = $_SERVER['DOCUMENT_ROOT'] . URL . 'upload/';
 
     $questions = sql("SELECT ROW_NUMBER() OVER (ORDER BY id) AS num_ligne, id, libelle, id_questionnaire FROM questions  WHERE id_questionnaire = :id_questionnaire",  array(
         'id_questionnaire' => $questionnaire['id']
@@ -67,7 +66,7 @@ if (!empty($_POST)) {
                 //     echo $_FILES["doc"]["name"] . " existe déjà.";
                 // } else{
                 
-                move_uploaded_file($_FILES["doc"]["tmp_name"], $chemin . $_FILES["doc"]["name"]);
+                move_uploaded_file($_FILES["doc"]["tmp_name"], UPLOAD_PATH . $_FILES["doc"]["name"]);
                 sql("UPDATE questionnaires SET support=:support WHERE id=:id_quest", array(
                     'id_quest' => $_POST['id_questionnaire'],
                     'support' => $_FILES["doc"]["name"]
@@ -93,10 +92,9 @@ if (!empty($_POST)) {
                 'id_quest' => $_POST['id_questionnaire'],
                 'support' => ""
             ));    
-            $chemin = $_SERVER['DOCUMENT_ROOT'] . URL . 'upload/';
             $nomfichier = $_POST['support'];
-            if (!empty($nomfichier) && file_exists($chemin . $nomfichier)) {
-                unlink($chemin . $nomfichier);
+            if (!empty($nomfichier) && file_exists(UPLOAD_PATH . $nomfichier)) {
+                unlink(UPLOAD_PATH . $nomfichier);
             }
             add_flash('Le support de formation a bien été supprimé ', 'warning');
             header('location:' . $_SERVER['REQUEST_URI']);
@@ -180,10 +178,10 @@ require_once('../includes/header.php');
                 <div class="fw-bold text-warning mb-2">Support de formation : </div>
                 <div class="row">
                     <div class="col">
-                        <a href="<?php echo $chemin . $questionnaire['support'] ?>" aria-describedby="gestion" class="support"><?php echo $questionnaire['support'] ?></a>
+                        <a href="<?php echo UPLOAD_PATH . $questionnaire['support'] ?>" aria-describedby="gestion" class="support"><?php echo $questionnaire['support'] ?></a>
                     </div>
                     <div class="col-auto">
-                        <a class="btn btn-outline-warning" href="<?php echo $chemin . $questionnaire['support'] ?>" data-bs-placement="bottom" title="Télécharger"><i class="fas fa-file-download"></i></a>
+                        <a class="btn btn-outline-warning" href="<?php echo UPLOAD_PATH . $questionnaire['support'] ?>" data-bs-placement="bottom" title="Télécharger"><i class="fas fa-file-download"></i></a>
                         <button type="submit" name="suppr" class="btn btn-outline-danger" data-bs-placement="bottom" title="Supprimer"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
