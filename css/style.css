@@ -71,6 +71,11 @@ figure a{
     text-align: justify;
 }
 
+.support, .support:hover{
+    color:#6c757d;
+    text-decoration: none;
+    font-weight: bolder;
+}
 /* @media (max-width: 600px) {
     .contenu{
         text-align: left;

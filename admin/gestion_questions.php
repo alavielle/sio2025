@@ -13,7 +13,7 @@ if (isset($_GET['questionnaire']) && is_numeric($_GET['questionnaire'])) {
         'id' => $_GET['questionnaire']
     ));
     $questionnaire = $questionnaires->fetch();
-
+    $chemin = $_SERVER['DOCUMENT_ROOT'] . URL . 'upload/';
 
     $questions = sql("SELECT ROW_NUMBER() OVER (ORDER BY id) AS num_ligne, id, libelle, id_questionnaire FROM questions  WHERE id_questionnaire = :id_questionnaire",  array(
         'id_questionnaire' => $questionnaire['id']
@@ -47,7 +47,7 @@ if (!empty($_POST)) {
     if (isset($_POST['upload'])) {
         // Vérifie si le fichier a été uploadé sans erreur.
         if (isset($_FILES["doc"]) && $_FILES["doc"]["error"] == 0) {
-            $allowed = array("jpg" => "image/jpg", "jpeg" => "image/jpeg", "gif" => "image/gif", "png" => "image/png", "pdf");
+            $allowed = array("jpg" => "image/jpg", "jpeg" => "image/jpeg", "gif" => "image/gif", "png" => "image/png", "pdf" => "application/pdf");
             $filename = $_FILES["doc"]["name"];
             $filetype = $_FILES["doc"]["type"];
             $filesize = $_FILES["doc"]["size"];
@@ -66,16 +66,45 @@ if (!empty($_POST)) {
                 // if(file_exists("upload/" . $_FILES["doc"]["name"])){
                 //     echo $_FILES["doc"]["name"] . " existe déjà.";
                 // } else{
-                move_uploaded_file($_FILES["doc"]["tmp_name"], "upload/" . $_FILES["doc"]["name"]);
+                
+                move_uploaded_file($_FILES["doc"]["tmp_name"], $chemin . $_FILES["doc"]["name"]);
+                sql("UPDATE questionnaires SET support=:support WHERE id=:id_quest", array(
+                    'id_quest' => $_POST['id_questionnaire'],
+                    'support' => $_FILES["doc"]["name"]
+                ));
                 echo "Votre fichier a été téléchargé avec succès.";
+                add_flash('Votre fichier a été téléchargé avec succès ', 'success');
+                header('location:' . $_SERVER['REQUEST_URI']);
+                exit();
                 //} 
             } else {
                 echo "Error: Il y a eu un problème de téléchargement de votre fichier. Veuillez réessayer.";
+                add_flash('Error: Il y a eu un problème de téléchargement de votre fichier. Veuillez réessayer.', 'warning');
+                header('location:' . $_SERVER['REQUEST_URI']);
             }
         } else {
             echo "Error: " . $_FILES["doc"]["error"];
         }
     }
+    //suppression du support
+    if (isset($_POST['suppr'])) {
+        if (!empty($_POST['id_questionnaire'])) {
+            sql("UPDATE questionnaires SET support=:support WHERE id=:id_quest", array(
+                'id_quest' => $_POST['id_questionnaire'],
+                'support' => ""
+            ));    
+            $chemin = $_SERVER['DOCUMENT_ROOT'] . URL . 'upload/';
+            $nomfichier = $_POST['support'];
+            if (!empty($nomfichier) && file_exists($chemin . $nomfichier)) {
+                unlink($chemin . $nomfichier);
+            }
+            add_flash('Le support de formation a bien été supprimé ', 'warning');
+            header('location:' . $_SERVER['REQUEST_URI']);
+            exit();
+        } 
+    }
+
+
     // Formulaire d'ajout soumis
     if (isset($_POST['add'])) {
         if (!empty(trim($_POST['nv_question']))) {
@@ -139,98 +168,121 @@ $subtitle = "Admin";
 require_once('../includes/header.php');
 ?>
 <div class="row justify-content-center">
-    <div class="col-lg-9 col-md-8 col-sm-6">
+    <div class="col-md-6">
         <h2><?php echo $questionnaire['libelle'] ?></h2>
     </div>
-    <div class="col-lg-3 col-md-4 col-sm-6 text-end">
-        <form action="upload" method="post" enctype="multipart/form-data">
-            <span class="fw-bold text-warning">Télécharger le support de formation</span><br>
-            <input type="file" name="support" class="form-control text-end mt-1"
-                data-key="support_<?php echo $questionnaire['id'] ?>" +
-                accept=".png, .jpg, .jpeg, .pdf">
-            <input type="submit" name="submit" value="Upload">
-            <div class='align-items-center mySpinner' id="spinner" style="display:none"><strong
-                    class='text-success'>Chargement en cours...</strong>
-                <div class='spinner-border text-success ms-auto' role='status' aria-hidden='true'></div>
-            </div>
-            <div class="d-grid gap-2 d-md-flex "><button class="btn btn-outline-warning"
-                    id="download_support" onclick="fileDownload(this.id)" style="display:none"><i
-                        class="fas fa-file-download"></i></button><button class="btn btn-outline-danger"
-                    id="delete_support" data-bs-toggle="modal" data-bs-placement="bottom" title="Supprimer"
-                    data-bs-target="#ModalDelete" onclick="fileDelete(this.id)" style="display:none;"><i
-                        class="fas fa-trash"></i></button><button class="btn btn-dt-vl" id="valide_support"
-                    data-bs-toggle="tooltip" data-bs-placement="bottom" title="Document validé"
-                    style="display:none;"><i class="fas fa-check-square"></i></button></div>
+    <div class="col-md-6">
+        <form method="post" enctype="multipart/form-data">
+            <input type="hidden" name="id_questionnaire" value="<?php echo $questionnaire['id'] ?>">
+            <input type="hidden" name="support" value="<?php echo $questionnaire['support'] ?>">
+
+            <?php if (!empty($questionnaire['support'])) : ?>
+                <div class="fw-bold text-warning mb-2">Support de formation : </div>
+                <div class="row">
+                    <div class="col">
+                        <a href="<?php echo $chemin . $questionnaire['support'] ?>" aria-describedby="gestion" class="support"><?php echo $questionnaire['support'] ?></a>
+                    </div>
+                    <div class="col-auto">
+                        <a class="btn btn-outline-warning" href="<?php echo $chemin . $questionnaire['support'] ?>" data-bs-placement="bottom" title="Télécharger"><i class="fas fa-file-download"></i></a>
+                        <button type="submit" name="suppr" class="btn btn-outline-danger" data-bs-placement="bottom" title="Supprimer"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            <?php else : ?>
+                <div class="fw-bold text-warning mb-2">Télécharger le support de formation</div>
+                <div class="input-group mb-3">
+                    <input type="file" name="doc" class="form-control" accept="image/*,application/pdf" aria-describedby="submit">
+                    <button class="btn btn-secondary" type="submit" id="upload" name="upload">Télécharger</button>
+
+                    <div>
+                        <span><?php echo $questionnaire['support'] ?></span>
+
+                    </div>
+                <?php endif ?>
         </form>
     </div>
 </div>
 <hr class="my-3">
-<div class="col-md-6">
-    <?php if ($questions->rowCount() > 0) : ?>
-        <h4>Liste des questions</h4>
-        <?php while ($question = $questions->fetch()) : ?>
-            <form method="post" class="row mb-3">
-                <input type="hidden" name="id_question" value="<?php echo $question['id'] ?>">
-                <div class="col-md-9 mb-3">
-                    <div class="input-group">
-                        <span class="input-group-text" id="<?php echo $question['num_ligne'] ?>"><?php echo $question['num_ligne'] ?></span><input type="text" name="question" data-id="<?php echo $question['id'] ?>" class="form-control" value="<?php echo $question['libelle'] ?>" aria-describedby="<?php echo $question['num_ligne'] ?>">
+<div class="row">
+    <div class="col-md-6">
+        <?php if ($questions->rowCount() > 0) : ?>
+            <h4>Liste des questions</h4>
+            <?php while ($question = $questions->fetch()) : ?>
+                <form method="post" class="row mb-3">
+                    <input type="hidden" name="id_question" value="<?php echo $question['id'] ?>">
+                    <div class="col-md-9 mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text" id="<?php echo $question['num_ligne'] ?>"><?php echo $question['num_ligne'] ?></span><input type="text" name="question" data-id="<?php echo $question['id'] ?>" class="form-control" value="<?php echo $question['libelle'] ?>" aria-describedby="<?php echo $question['num_ligne'] ?>">
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <button type="submit" name="update" class="btn btn-outline-success">
-                        <i class="fas fa-check"></i>
-                    </button>
-                    <a href="?action=delete&destination=question&id=<?php echo $question['id'] ?>" class="btn btn-outline-danger confirm">
-                        <i class="fa fa-trash"></i>
-                    </a>
-                </div>
-            </form>
-        <?php endwhile ?>
-    <?php else : ?>
-        <div class="mt-4 alert alert-warning">Il n'y a pas encore de question</div>
-    <?php endif ?>
-    <hr class="my-3">
-    <form method="post" class="row">
-        <input type="hidden" name="id_questionnaire" value="<?php echo $questionnaire['id'] ?>">
-        <div class="col-md-9 mb-3">
-            <input type="text" id="nv_question" name="nv_question" class="form-control" placeholder="question à ajouter">
-        </div>
-        <div class="col-md-3 mb-3">
-            <button type="submit" name="add" class="btn btn-secondary">Ajouter</button>
-        </div>
-    </form>
-</div>
-<div class="col-md-6">
-    <div id="zone_propo" style="display:none">
-        <h2>Propositions <span id="num_ligne"></span></h2>
-        <div class="row">
-            <div id="les_propositions">
-            </div>
-        </div>
+                    <div class="col-md-3 mb-3">
+                        <button type="submit" name="update" class="btn btn-outline-success">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <a href="?action=delete&destination=question&id=<?php echo $question['id'] ?>" class="btn btn-outline-danger confirm">
+                            <i class="fa fa-trash"></i>
+                        </a>
+                    </div>
+                </form>
+            <?php endwhile ?>
+        <?php else : ?>
+            <div class="mt-4 alert alert-warning">Il n'y a pas encore de question</div>
+        <?php endif ?>
         <hr class="my-3">
         <form method="post" class="row">
-            <input type="hidden" name="la_question" id="la_question" value="">
+            <input type="hidden" name="id_questionnaire" value="<?php echo $questionnaire['id'] ?>">
             <div class="col-md-9 mb-3">
-                <input type="text" id="nv_proposition" name="nv_proposition" class="form-control" placeholder="proposition à ajouter">
+                <input type="text" id="nv_question" name="nv_question" class="form-control" placeholder="question à ajouter">
             </div>
             <div class="col-md-3 mb-3">
-                <button type="submit" name="add_propo" id="add_propo" class="btn btn-secondary">Ajouter</button>
+                <button type="submit" name="add" class="btn btn-secondary">Ajouter</button>
             </div>
         </form>
-        <div class="col mt-3">
-            <label for="commentaire" class="form-label">Commentaire réponse</label>
-            <textarea class="form-control" id="commentaire" name="commentaire" rows="5"></textarea>
-        </div>
-        <div class="col mt-3 text-end">
-            <button type="btn" name="update" id="update" class="btn btn-outline-success">
-                <i class="fas fa-check"></i>
-            </button>
+    </div>
+    <div class="col-md-6">
+        <div id="zone_propo" style="display:none">
+            <h2>Propositions <span id="num_ligne"></span></h2>
+            <div class="row">
+                <div id="les_propositions">
+                </div>
+            </div>
+            <hr class="my-3">
+            <form method="post" class="row">
+                <input type="hidden" name="la_question" id="la_question" value="">
+                <div class="col-md-9 mb-3">
+                    <input type="text" id="nv_proposition" name="nv_proposition" class="form-control" placeholder="proposition à ajouter">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <button type="submit" name="add_propo" id="add_propo" class="btn btn-secondary">Ajouter</button>
+                </div>
+            </form>
+            <div class="col mt-3">
+                <label for="commentaire" class="form-label">Commentaire réponse</label>
+                <textarea class="form-control" id="commentaire" name="commentaire" rows="5"></textarea>
+            </div>
+            <div class="col mt-3 text-end">
+                <button type="btn" name="update" id="update" class="btn btn-outline-success">
+                    <i class="fas fa-check"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>
+<div class="modal fade" tabindex="-1" id="modal_suppr">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <p>Supprimer le support ?</p>
+            </div>
+            <div class="modal-footer">
+                <form name="delete">
+                    <input type="hidden" name="id_questionnaire" value="<?php echo $questionnaire['id'] ?>">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
-
-
 <!-- script page -->
 <script src="<?php echo URL ?>js/question.js"></script>
 

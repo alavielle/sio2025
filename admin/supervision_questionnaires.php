@@ -9,7 +9,7 @@ if (!isAdmin()) {
 }
 
 
-$categories = sql("SELECT * FROM categories ORDER BY libelle");
+$listeQuest = sql("SELECT * FROM questionnaires ORDER BY libelle");
 
 $requete = "SELECT q.id as id_quest, q.libelle, c.libelle as categorie
 FROM questionnaires q
@@ -43,7 +43,7 @@ require_once('../includes/header.php');
 
 <div class="row" id="questionnaires">
     <h1>Réponses par questionnaires</h1>
-    <div class="col-md-9 order-1 order-md-0">
+    <div class="col-md-7 order-1 order-md-0">
         <?php if ($questionnaires->rowCount() > 0) : ?>
             <?php while ($questionnnaire = $questionnaires->fetch()) : ?>
                 <div class="accordion" id="accordion">
@@ -77,13 +77,14 @@ require_once('../includes/header.php');
                                                 $sqlTotal = "SELECT COUNT(id) as total FROM questions WHERE questions.id_questionnaire = " . $questionnnaire['id_quest'] . "";
                                                 $total = sql($sqlTotal)->fetch(); ?>
                                                 <div class="row">
-                                                <?php while ($score = $scores->fetch()) : ?>
-                                                    <div class="col-md-1 col-sm-3 text-center">
-                                                        <h5><a href="../user_questionnaire.php?questionnaire=<?php echo $questionnnaire['id_quest'] . "&amp;id_user=" . $utilisateur['id'] . "&amp;date=" . $score['date'] . "&" .  uniqid() .  uniqid() ?>
-                                                        " class="align-self-end mt-3 text-decoration-none" id="lien_questionnaire" data-bs-toggle="tooltip"  data-bs-html="true" data-bs-placement="bottom" title="<?php $date = date_create($score['date']); echo date_format($date, 'd/m/Y H:i'); ?> - Voir le détail"><?php echo $score['score'] ?>/<?php echo $total['total'] ?></a></h5>
-                                                        
-                                                    </div>
-                                                <?php endwhile ?>
+                                                    <?php while ($score = $scores->fetch()) : ?>
+                                                        <div class="col-md-1 col-sm-3 text-center">
+                                                            <h5><a href="../user_questionnaire.php?questionnaire=<?php echo $questionnnaire['id_quest'] . "&amp;id_user=" . $utilisateur['id'] . "&amp;date=" . $score['date'] . "&" .  uniqid() .  uniqid() ?>
+                                                        " class="align-self-end mt-3 text-decoration-none" id="lien_questionnaire" data-bs-toggle="tooltip" data-bs-html="true" data-bs-placement="bottom" title="<?php $date = date_create($score['date']);
+                                                                                                                                                                                                                    echo date_format($date, 'd/m/Y H:i'); ?> - Voir le détail"><?php echo $score['score'] ?>/<?php echo $total['total'] ?></a></h5>
+
+                                                        </div>
+                                                    <?php endwhile ?>
                                                 </div>
                                             </div>
                                         <?php endwhile ?>
@@ -102,18 +103,25 @@ require_once('../includes/header.php');
             <div class="alert alert-light">Pas de questionnaire dans cette catégorie</div>
         <?php endif ?>
     </div>
+    <aside class="col-md-5 order-0 order-md-1">
+        <div class="col-5 offset-1">
+            <select class="form-select" name="questionnaire" id="stat_quest">
+                <?php if ($listeQuest->rowCount() > 0) : ?>
+                    <?php while ($questionnaire = $listeQuest->fetch()) : ?>
+                        <option value="<?php echo $questionnaire['id'] ?>"><?php echo $questionnaire['libelle'] ?></option>
+                    <?php endwhile ?>
+                <?php endif ?>
+            </select>
+        </div>
+        <div class="col-12">
+            <canvas id="chartQuest"></canvas>
+        </div>
+    </aside>
 
-    <?php if ($categories->rowCount() > 0) : ?>
-        <aside class="col-md-3 order-0 order-md-1 border-start border-dark">
-            <div class="list-group mb-2">
-                <a href="<?php echo $_SERVER['PHP_SELF'] ?>" class="list-group-item list-group-item-action <?php if (!isset($_GET['categorie'])) echo 'active' ?>">Tous</a>
-                <?php while ($categorie = $categories->fetch()) : ?>
-                    <a href="?categorie=<?php echo $categorie['id'] ?>" class="list-group-item liste-group-item-action <?php if (isset($_GET['categorie']) && $_GET['categorie'] == $categorie['id']) echo 'active' ?>"><?php echo $categorie['libelle'] ?></a>
-                <?php endwhile ?>
-            </div>
-        </aside>
-    <?php endif ?>
+    <!-- script page -->
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="<?php echo URL ?>js/charts.js"></script>
 
     <?php
     require_once('../includes/footer.php');

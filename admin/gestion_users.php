@@ -95,37 +95,56 @@ if (!empty($_POST)) {
         }
     }
 
-    
     // Formulaire de mail soumis
-    if (isset($_POST['mail'])) {
-        if (!empty($_POST['email'])) {
+    if (isset($_POST['envoi_mail'])) {
+        if (!empty($_POST['destinataire'])) {
             $user = sql("SELECT * FROM users WHERE email=:email", array(
-                'email' => $_POST['email']
+                'email' => $_POST['destinataire']
             ));
             if ($user->rowCount() > 0) {
                 // génération du mail
                 $infosuser = $user->fetch();
                 $destinataire = $infosuser['email'];
-                $nom = $infosuser['prenom']." ".$infosuser['nom'];
-                $delai = 10; // en jours
-                $expiration = time() + 60 * 60 * 24 * $delai;
-                $token = str_repeat(uniqid(), 3);
-                sql("UPDATE users SET token=:token, expiration=:expiration WHERE id=:id", array(
-                    'token' => $token,
-                    'expiration' => $expiration,
-                    'id' => $infosuser['id']
-                ));
-                $sujet = "Accès au questionnaire d'évaluation";
-                $lien = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . URL . 'index.php?email=' . $infosuser['email'] . '&token=' . $token;
-                $message = '<p>Bonjour ' . $nom . ',<br><br>Voici le lien à suivre pour compléter votre questionnaire d\'évaluation...<br> 
-                Ce lien est valide '. $delai. ' jours<br>
-                <a href="' . $lien . '">' . $lien . '</a><br><br>
-                A bientôt pour tester vos connaissances !</p>';
-                //envoiMail($destinataire, $nom, $sujet, $message);
+                $prenom = $infosuser['prenom'];
+                if (!empty($_POST['id_mail']) && $_POST['id_mail'] > 0 && !empty($_POST['contenu'])) {
+                    $id_mail = $_POST['id_mail']; //mail d'envoi du lien
+                    $contenu = $_POST['contenu'];
+                    $sujet = $_POST['title'];
+                    $expiration = time() + 60 * 60 * 24 * 10;
+                    $token = str_repeat(uniqid(), 3);
+                    sql("UPDATE users SET token=:token, expiration=:expiration WHERE id=:id", array(
+                        'token' => $token,
+                        'expiration' => $expiration,
+                        'id' => $infosuser['id']
+                    ));
+                    if ($id_mail > 0) {
+                        sql("UPDATE mails SET title=:title, contenu=:contenu WHERE id=:id_mail", array(
+                            'title' => $sujet,
+                            'contenu' => $contenu,
+                            'id_mail' => $id_mail
+                        ));
+                    } else {
+                        sql("INSERT INTO mails (title, contenu) VALUES (:title, :contenu)", array(
+                            'title' => $sujet,
+                            'contenu' => $contenu
+                        ));
+                    }
+
+                    $lien = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . URL . 'index.php?email=' . $infosuser['email'] . '&token=' . $token;
+                    $contenu = str_replace('%prenom%', $prenom, $contenu);
+                    $contenu = str_replace('%lien%', $lien, $contenu);
+                    //envoiMail($destinataire, $nom, $sujet, $contenu);
+                    sql("INSERT INTO histo_mails (id_user ,title, contenu,  date) VALUES (:id_user, :title, :contenu, :date)", array(
+                        'title' => $sujet,
+                        'contenu' => $contenu,
+                        'id_user' => $infosuser['id'],
+                        'date' => date("Y-m-d H:i:s")
+                    ));
+                }
             }
-            
+
             add_flash("Le mail a été envoyé", 'info');
-            echo($message);
+            echo ($contenu);
             //header('location:' . $_SERVER['PHP_SELF']);
             exit();
         } else {
@@ -208,20 +227,18 @@ require_once('../includes/header.php');
                 <button type="submit" name="update" class="btn btn-outline-success">
                     <i class="fa fa-check"></i>
                 </button>
-                <button type="submit" name="mail" class="btn btn-outline-primary">
+                <button type="button" data-bs-toggle="modal" data-bs-target="#modal_mail" name="prepa_mail" class="btn btn-outline-primary" data-index="<?php echo $user['email'] ?>">
                     <i class="far fa-envelope"></i>
                 </button>
                 <a href="?action=delete&id=<?php echo $user['id']  ?>" class="btn btn-outline-danger confirm">
                     <i class="fa fa-trash"></i>
                 </a>
             </div>
-        </form>
-    <?php endwhile ?>
-<?php else : ?>
-    <div class="mt-4 alert alert-warning">Il n'y a pas encore d'utilisateur</div>
-<?php endif ?>
-<hr class="my-3">
-<form method="post" class="row">
+        <?php endwhile ?>
+    <?php else : ?>
+        <div class="mt-4 alert alert-warning">Il n'y a pas encore d'utilisateur</div>
+    <?php endif ?>
+    <hr class="my-3">
     <div class="col-md-2 mb-3">
         <input type="text" id="nv_email" name="nv_email" class="form-control" placeholder="email">
     </div>
@@ -251,18 +268,62 @@ require_once('../includes/header.php');
     <div class="col-md-2 mb-3">
         <button type="submit" name="add" class="btn btn-secondary">Ajouter</button>
     </div>
-</form>
+    <div class="modal fade" tabindex="-1" id="modal_mail">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sélection du mail à envoyer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        <label for="id_mail" class="form-label">Email prédéfini </label>
+                        <select class="form-select" name="id_mail" id="id_mail">
+                            <option value="0">Choisir</option>
+                            <?php $mails = sql("SELECT * FROM mails ORDER BY id "); ?>
+                            <?php if ($mails->rowCount() > 0) : ?>
+                                <?php while ($mail = $mails->fetch()) : ?>
+                                    <option value="<?php echo $mail['id'] ?>"><?php echo $mail['title'] ?></option>
+                                <?php endwhile ?>
+                            <?php endif ?>
+                        </select>
+                    <p><span class="fst-italic">Ou email à créer</span></p>
+                    <label for="title" class="form-label">Sujet</label>
+                    <input type="text" class="form-control mb-3" name="title" id="title">
+                    <label for="contenu" class="form-label">Contenu</label>
+                    <textarea class="form-control" name="contenu" id="contenu" rows="10"></textarea>
+                    </p>
+                    <p>
+                        <label for="destinataire">Envoyer à : </label>
+                        <input type="text" class="form-control mb-3" name="destinataire" id="destinataire" readonly>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" name="envoi_mail" class="btn btn-secondary">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
-    $('input[name="droits"]').change(function(e) {
-        if ($(this).is(":checked")) {
-            $(this).next('label').removeClass('text-muted');
-        } else {
-            console.log($(this).next('span'));
-            $(this).next('label').addClass('text-muted');
-        }
-    });
-</script>
+        </form>
 
-<?php
-require_once('../includes/footer.php');
+        <script>
+            $('input[name="droits"]').change(function(e) {
+                if ($(this).is(":checked")) {
+                    $(this).next('label').removeClass('text-muted');
+                } else {
+                    console.log($(this).next('span'));
+                    $(this).next('label').addClass('text-muted');
+                }
+            });
+            $('button[name=prepa_mail]').click(function() {
+                $('#destinataire').val($(this).attr('data-index'));
+            });
+        </script>
+
+        <!-- script page -->
+        <script src="<?php echo URL ?>js/mail.js"></script>
+
+        <?php
+        require_once('../includes/footer.php');
