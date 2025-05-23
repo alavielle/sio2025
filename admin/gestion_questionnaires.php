@@ -25,8 +25,9 @@ if (!empty($_POST)) {
     // Formulaire d'ajout soumis
     if (isset($_POST['add'])) {
         if (!empty(trim($_POST['nv_questionnaire']))) {
-            sql("INSERT INTO questionnaires VALUES(NULL, :libelle, 0)", array(
-                'libelle' => $_POST['nv_questionnaire']
+            sql("INSERT INTO questionnaires VALUES(NULL, :libelle, 0, '', :uuid)", array(
+                'libelle' => $_POST['nv_questionnaire'],
+                'uuid' => uniqid().uniqid()
             ));
             add_flash('Le questionnaire ' . $_POST['nv_questionnaire'] . ' a été ajouté', 'warning');
             header('location:' . $_SERVER['PHP_SELF']);

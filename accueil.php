@@ -43,7 +43,7 @@ require_once('includes/header.php');
                     </div>
                     <div class="col-auto order-2 order-md-1 align-self-center">
                         <?php if (!empty($questionnaire['support'])) : ?>
-                            <a class="btn btn-in-orange" href="<?php echo UPLOAD_PATH . $questionnaire['support'] ?>">Télécharger le support de formation</a>
+                            <a class="btn btn-in-orange" href="<?php echo UPLOAD_PATH . $questionnaire['uuid'] ?>">Télécharger le support de formation</a>
                         <?php endif ?>
                     </div>
                 </div>

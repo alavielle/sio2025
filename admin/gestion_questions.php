@@ -66,18 +66,18 @@ if (!empty($_POST)) {
                 //     echo $_FILES["doc"]["name"] . " existe déjà.";
                 // } else{
                 
-                move_uploaded_file($_FILES["doc"]["tmp_name"], UPLOAD_PATH . $_FILES["doc"]["name"]);
+                //move_uploaded_file($_FILES["doc"]["tmp_name"], UPLOAD_PATH . $_FILES["doc"]["name"]);
                 sql("UPDATE questionnaires SET support=:support WHERE id=:id_quest", array(
                     'id_quest' => $_POST['id_questionnaire'],
                     'support' => $_FILES["doc"]["name"]
                 ));
-                echo "Votre fichier a été téléchargé avec succès.";
+                //echo "Votre fichier a été téléchargé avec succès.";
                 add_flash('Votre fichier a été téléchargé avec succès ', 'success');
                 header('location:' . $_SERVER['REQUEST_URI']);
                 exit();
                 //} 
             } else {
-                echo "Error: Il y a eu un problème de téléchargement de votre fichier. Veuillez réessayer.";
+                //echo "Error: Il y a eu un problème de téléchargement de votre fichier. Veuillez réessayer.";
                 add_flash('Error: Il y a eu un problème de téléchargement de votre fichier. Veuillez réessayer.', 'warning');
                 header('location:' . $_SERVER['REQUEST_URI']);
             }
@@ -178,22 +178,20 @@ require_once('../includes/header.php');
                 <div class="fw-bold text-warning mb-2">Support de formation : </div>
                 <div class="row">
                     <div class="col">
-                        <a href="<?php echo UPLOAD_PATH . $questionnaire['support'] ?>" aria-describedby="gestion" class="support"><?php echo $questionnaire['support'] ?></a>
+                        <a href="<?php echo UPLOAD_PATH . $questionnaire['uuid'] ?>" aria-describedby="gestion" class="support"><?php echo $questionnaire['support'] ?></a>
                     </div>
                     <div class="col-auto">
-                        <a class="btn btn-outline-warning" href="<?php echo UPLOAD_PATH . $questionnaire['support'] ?>" data-bs-placement="bottom" title="Télécharger"><i class="fas fa-file-download"></i></a>
+                        <a class="btn btn-outline-warning" href="<?php echo UPLOAD_PATH . $questionnaire['uuid'] ?>" data-bs-placement="bottom" title="Télécharger"><i class="fas fa-file-download"></i></a>
                         <button type="submit" name="suppr" class="btn btn-outline-danger" data-bs-placement="bottom" title="Supprimer"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             <?php else : ?>
                 <div class="fw-bold text-warning mb-2">Télécharger le support de formation</div>
                 <div class="input-group mb-3">
-                    <input type="file" name="doc" class="form-control" accept="image/*,application/pdf" aria-describedby="submit">
-                    <button class="btn btn-secondary" type="submit" id="upload" name="upload">Télécharger</button>
-
+                    <input type="file" name="doc" class="form-control" accept="image/*,application/pdf" data-index="<?php echo $questionnaire['uuid'] ?>" id="file" onchange="fileUpload()">
+                    <button type="submit" class="btn btn-secondary" name="upload" id="upload" style="display:none">Télécharger</button>
                     <div>
                         <span><?php echo $questionnaire['support'] ?></span>
-
                     </div>
                 <?php endif ?>
         </form>
@@ -283,6 +281,8 @@ require_once('../includes/header.php');
 </div>
 <!-- script page -->
 <script src="<?php echo URL ?>js/question.js"></script>
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.20.min.js"></script>
+<script src="<?php echo URL ?>js/aws.js"></script>
 
 <?php
 require_once('../includes/footer.php');

@@ -63,10 +63,10 @@
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="sousmenu" role='button' data-bs-toggle="dropdown">Back Office</a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="<?php echo URL ?>admin/gestion_users.php">Gestion des utilisateurs</a></li>
-                                    <li><a class="dropdown-item" href="<?php echo URL ?>admin/gestion_groupes.php">Gestion des groupes</a></li>
-                                    <li><a class="dropdown-item" href="<?php echo URL ?>admin/gestion_categories.php">Gestion des categories</a></li>
-                                    <li><a class="dropdown-item" href="<?php echo URL ?>admin/gestion_questionnaires.php">Gestion des questionnaires</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo URL ?>admin/gestion_users.php">Utilisateurs</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo URL ?>admin/gestion_groupes.php">Groupes</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo URL ?>admin/gestion_categories.php">Categories</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo URL ?>admin/gestion_questionnaires.php">Questionnaires</a></li>
                                 </ul>
                             </li>
 

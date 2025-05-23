@@ -44,9 +44,10 @@ $subtitle = "Admin";
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
-
         @page {
             size: A4 portrait;
+            max-width: 19cm;
+            margin: 2cm 1.3cm 2cm 1.3cm;
         }
 
         body {
@@ -72,7 +73,7 @@ $subtitle = "Admin";
             <h5>Date : <?php echo date("d/m/Y") ?></h5>
         </div>
     </div>
-    <div class="row ">
+    <div class="row " id="toPDF">
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle">
                 <thead class="table-light">
@@ -85,7 +86,7 @@ $subtitle = "Admin";
                 <tbody>
                     <?php if ($users->rowCount() > 0) :
                         while ($user = $users->fetch()) : ?>
-                            <tr>
+                            <tr height="60">
                                 <td><?= $user['nom'] ?></td>
                                 <td><?= $user['prenom'] ?></td>
                                 <td></td>
@@ -97,10 +98,6 @@ $subtitle = "Admin";
                 </tbody>
             </table>
         </div>
-
-
     </div>
+
 </body>
-
-
-

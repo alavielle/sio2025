@@ -54,7 +54,7 @@ if (!empty($_POST)) {
                 } else {
                     $nv_droits = 0;
                 }
-                sql("INSERT INTO users VALUES(NULL,  :email, :nom, :prenom, :password, :droits, :id_groupe, NULL, NULL)", array(
+                sql("INSERT INTO users VALUES(NULL,  :email, :nom, :prenom, :password, :droits, :id_groupe, 0, NULL, NULL)", array(
                     'email' => $_POST['nv_email'],
                     'nom' => $_POST['nv_nom'],
                     'prenom' => $_POST['nv_prenom'],
@@ -107,15 +107,9 @@ if (!empty($_POST)) {
 
                 $params = array();
                 // Tenir compte d'un éventuel filtre sur le groupe ou le questionnaire
-                if (isset($_GET['groupe']) && is_numeric($_GET['groupe']) && !isset($_GET['questionnaire'])) {
+                if (isset($_GET['groupe']) && is_numeric($_GET['groupe'])) {
                     $requete .= ' WHERE groupes.id = :id_groupe';
                     $params['id_groupe'] = $_GET['groupe'];
-                }
-                if (isset($_GET['questionnaire']) && is_numeric($_GET['questionnaire']) && !isset($_GET['groupe'])) {
-                    $requete .= ' inner join reponses_utilisateur on reponses_utilisateur.id_utilisateur = users.id
-                    inner join questions on questions.id = reponses_utilisateur.id_question
-                    WHERE questions.id_questionnaire = :id_quest';
-                    $params['id_quest'] = $_GET['questionnaire'];
                 }
 
                 $requete .= " order by users.prenom";
@@ -188,24 +182,9 @@ from users left join groupes on groupes.id = users.id_groupe";
 
 $params = array();
 // Tenir compte d'un éventuel filtre sur le groupe ou le questionnaire
-if (isset($_GET['groupe']) && is_numeric($_GET['groupe']) && !isset($_GET['questionnaire'])) {
+if (isset($_GET['groupe']) && is_numeric($_GET['groupe'])) {
     $requete .= ' WHERE groupes.id = :id_groupe';
     $params['id_groupe'] = $_GET['groupe'];
-}
-if (isset($_GET['questionnaire']) && is_numeric($_GET['questionnaire']) && !isset($_GET['groupe'])) {
-    $requete .= ' inner join reponses_utilisateur on reponses_utilisateur.id_utilisateur = users.id
-        inner join questions on questions.id = reponses_utilisateur.id_question
-        WHERE questions.id_questionnaire = :id_quest';
-    $params['id_quest'] = $_GET['questionnaire'];
-}
-if (isset($_GET['groupe']) && isset($_GET['questionnaire'])) {
-    if (is_numeric($_GET['questionnaire']) && is_numeric($_GET['groupe'])) {
-        $requete .= ' inner join reponses_utilisateur on reponses_utilisateur.id_utilisateur = users.id
-        inner join questions on questions.id = reponses_utilisateur.id_question
-        WHERE questions.id_questionnaire = :id_quest AND groupes.id = :id_groupe';
-        $params['id_quest'] = $_GET['questionnaire'];
-        $params['id_groupe'] = $_GET['groupe'];
-    }
 }
 
 $requete .= " order by users.prenom";
@@ -232,7 +211,7 @@ require_once('../includes/header.php');
     </div>
     <div class="col-md-2">
         <?php if ($questionnaires->rowCount() > 0) : ?>
-            <select class="form-select" onChange="location.href=this.value;" id="select_quest">
+            <select class="form-select" id="select_quest">
                 <option value="<?php echo $_SERVER['PHP_SELF'] ?>">Choisir l'évaluation</option>
                 <?php while ($questionnaire = $questionnaires->fetch()) : ?>
                     <option value="?questionnaire=<?php echo $questionnaire['id'] ?>" <?php if (isset($_GET['questionnaire']) && $_GET['questionnaire'] == $questionnaire['id']) echo 'selected' ?>><?php echo $questionnaire['libelle'] ?></option>
@@ -241,10 +220,10 @@ require_once('../includes/header.php');
         <?php endif ?>
     </div>
     <div class="col-md-2 text-center">
-        <a class="btn btn-orange" target="_blank" href="<?php echo "appel.php" ?><?php if (isset($_GET['groupe']) && is_numeric($_GET['groupe'])) echo "?groupe=" . $_GET['groupe'] ?><?php if (isset($_GET['questionnaire']) && is_numeric($_GET['questionnaire'])) echo "?questionnaire=" . $_GET['questionnaire'] ?>"><i class="fas fa-file-signature me-2"></i>Fiche d'appel</a>
+        <a class="btn btn-orange" target="_blank" href="<?php echo "appel.php" ?><?php if (isset($_GET['groupe']) && is_numeric($_GET['groupe'])) echo "?groupe=" . $_GET['groupe'] ?>"><i class="fas fa-file-signature me-2"></i>Fiche d'appel</a>
     </div>
     <div class="col-md-2 text-center">
-        <a class="btn btn-violet" target="_blank" href="<?php echo "attestation.php" ?><?php if (isset($_GET['groupe']) && is_numeric($_GET['groupe'])) echo "?groupe=" . $_GET['groupe'] ?><?php if (isset($_GET['questionnaire']) && is_numeric($_GET['questionnaire'])) echo "?questionnaire=" . $_GET['questionnaire'] ?>"><i class="fas fa-file-contract me-2"></i>Attestations</a>
+        <a class="btn btn-violet" target="_blank" href="<?php echo "attestation.php" ?><?php if (isset($_GET['groupe']) && is_numeric($_GET['groupe'])) echo "?groupe=" . $_GET['groupe'] ?>"><i class="fas fa-file-contract me-2"></i>Attestations</a>
     </div>
     <div class="col-md-2 text-center">
         <button data-bs-toggle="modal" data-bs-target="#modal_mail" class="btn btn-outline-primary" name="mail_groupe"><i class="fas fa-envelope me-2"></i>Mail groupé</button>
@@ -271,9 +250,9 @@ require_once('../includes/header.php');
         Actions
     </div>
 </div>
-<form method="post" class="row mb-3">
     <?php if ($users->rowCount() > 0) :
         while ($user = $users->fetch()) : ?>
+<form method="post" class="row mb-3">
             <input type="hidden" name="id" value="<?php echo $user['id'] ?>">
             <div class="col-md-2 mb-3">
                 <input type="text" name="email" class="form-control" value="<?php echo $user['email'] ?>">
@@ -316,15 +295,18 @@ require_once('../includes/header.php');
                 <button type="button" data-bs-toggle="modal" data-bs-target="#modal_mail" name="prepa_mail" class="btn btn-outline-primary" data-index="<?php echo $user['email'] ?>" data-bs-placement="bottom" title="Envoyer un mail">
                     <i class="fas fa-envelope"></i>
                 </button>
-                <a href="?action=delete&id=<?php echo $user['id']  ?>" class="btn btn-outline-danger confirm" data-bs-placement="bottom" title="Supprimer l'utilisateur">
+                <a href="<?php echo $_SERVER['PHP_SELF'] ?>?action=delete&id=<?php echo $user['id']  ?>" class="btn btn-outline-danger confirm" data-bs-placement="bottom" title="Supprimer l'utilisateur">
                     <i class="fa fa-trash"></i>
                 </a>
             </div>
+</form>
         <?php endwhile ?>
     <?php else : ?>
         <div class="mt-4 alert alert-warning">Il n'y a pas encore d'utilisateur</div>
     <?php endif ?>
     <hr class="my-3">
+    
+<form method="post" class="row mb-3">
     <div class="col-md-2 mb-3">
         <input type="text" id="nv_email" name="nv_email" class="form-control" placeholder="email">
     </div>
@@ -354,6 +336,9 @@ require_once('../includes/header.php');
     <div class="col-md-2 mb-3">
         <button type="submit" name="add" class="btn btn-secondary">Ajouter</button>
     </div>
+</form>
+
+<form method="post" >
     <div class="modal fade" tabindex="-1" id="modal_mail">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -409,9 +394,6 @@ require_once('../includes/header.php');
     $('button[name=mail_groupe]').click(function() {
         if ($('#select_groupe option:selected').text() != "Choisir le groupe") {
             $('#destinataire').val($('#select_groupe option:selected').text());
-        }
-        if ($('#select_quest option:selected').text() != "Choisir l'évaluation") {
-            $('#destinataire').val($('#select_quest option:selected').text());
         }
     });
 </script>

@@ -24,9 +24,9 @@ document.addEventListener("DOMContentLoaded", function () {
           $("#les_scores").html("Pas encore de scores pour ce questionnaire");
         } else {
           myChart = new Chart(ctx, {
-            type: 'line',
+            type: 'bar',
             data: {
-              labels: datas.map(row => row.date),
+              labels: datas.map(row => row.row_num),
               datasets: [
                 {
                   label: "Scores",
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   })
 
-  AfficherMyChart(1);
+  //AfficherMyChart(1);
 
   $('#stat_quest').change(function () {
     AfficherMyChart($(this).val());

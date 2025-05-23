@@ -10,30 +10,23 @@ if (!isAdmin()) {
 }
 
 
-$requete = "select distinct users.* , groupes.libelle
-from users left join groupes on groupes.id = users.id_groupe";
 
 $params = array();
-// Tenir compte d'un éventuel filtre sur le groupe ou le questionnaire
-if (isset($_GET['groupe']) && is_numeric($_GET['groupe']) && !isset($_GET['questionnaire'])) {
-    $requete .= ' WHERE groupes.id = :id_groupe';
-    $params['id_groupe'] = $_GET['groupe'];
-}
-if (isset($_GET['questionnaire']) && is_numeric($_GET['questionnaire']) && !isset($_GET['groupe'])) {
-    $requete .= ' inner join reponses_utilisateur on reponses_utilisateur.id_utilisateur = users.id
-        inner join questions on questions.id = reponses_utilisateur.id_question
-        WHERE questions.id_questionnaire = :id_quest';
-    $params['id_quest'] = $_GET['questionnaire'];
-}
-if (isset($_GET['groupe']) && isset($_GET['questionnaire'])) {
-    if (is_numeric($_GET['questionnaire']) && is_numeric($_GET['groupe'])) {
-        $requete .= ' inner join reponses_utilisateur on reponses_utilisateur.id_utilisateur = users.id
-        inner join questions on questions.id = reponses_utilisateur.id_question
-        WHERE questions.id_questionnaire = :id_quest AND groupes.id = :id_groupe';
-        $params['id_quest'] = $_GET['questionnaire'];
+if (isset($_GET['id'])) {
+    $requete = 'SELECT * FROM users WHERE id=:id';
+    $params['id'] = $_GET['id'];
+} else {
+    // Tenir compte d'un éventuel filtre sur le groupe ou le questionnaire
+    if (isset($_GET['groupe']) && is_numeric($_GET['groupe'])) {
+        $requete = "select distinct users.* , groupes.libelle from users left join groupes on groupes.id = users.id_groupe WHERE groupes.id = :id_groupe";
         $params['id_groupe'] = $_GET['groupe'];
+    } else {
+        $requete = "select distinct users.* , groupes.libelle
+        from users left join groupes on groupes.id = users.id_groupe";
     }
 }
+
+
 
 $users = sql($requete, $params);
 
@@ -83,7 +76,7 @@ $subtitle = "Admin";
                     <h3 class="align-self-center">Attestation d'évaluation </h3>
                 </div>
                 <div class="row text-center mb-3">
-                    
+
                 </div>
 
 
