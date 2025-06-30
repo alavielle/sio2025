@@ -122,10 +122,10 @@ if (!empty($_POST)) {
 
                     $destinataire = $user['email'];
                     $prenom = $user['prenom'];
-                    if (!empty($_POST['id_mail']) && $_POST['id_mail'] > 0 && !empty($_POST['contenu'])) {
-                        $id_mail = $_POST['id_mail']; //mail d'envoi du lien
-                        $contenu = $_POST['contenu'];
-                        $sujet = $_POST['title'];
+                    $id_mail = $_POST['id_mail']; //mail d'envoi du lien
+                    $contenu = $_POST['contenu'];
+                    $sujet = $_POST['title'];
+                    if ($_POST['id_mail'] == 1) {
                         $expiration = time() + 60 * 60 * 24 * 10;
                         $token = str_repeat(uniqid(), 3);
                         sql("UPDATE users SET token=:token, expiration=:expiration WHERE id=:id", array(
@@ -133,30 +133,30 @@ if (!empty($_POST)) {
                             'expiration' => $expiration,
                             'id' => $user['id']
                         ));
-                        if ($id_mail > 0) {
-                            sql("UPDATE mails SET title=:title, contenu=:contenu WHERE id=:id_mail", array(
-                                'title' => $sujet,
-                                'contenu' => $contenu,
-                                'id_mail' => $id_mail
-                            ));
-                        } else {
-                            sql("INSERT INTO mails (title, contenu) VALUES (:title, :contenu)", array(
-                                'title' => $sujet,
-                                'contenu' => $contenu
-                            ));
-                        }
-
-                        $lien = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . URL . 'index.php?email=' . $user['email'] . '&token=' . $token;
-                        $contenu = str_replace('%prenom%', $prenom, $contenu);
-                        $contenu = str_replace('%lien%', $lien, $contenu);
-                        //envoiMail($destinataire, $nom, $sujet, $contenu);
-                        sql("INSERT INTO histo_mails (id_user ,title, contenu,  date) VALUES (:id_user, :title, :contenu, :date)", array(
+                    }
+                    if ($id_mail > 0) {
+                        sql("UPDATE mails SET title=:title, contenu=:contenu WHERE id=:id_mail", array(
                             'title' => $sujet,
                             'contenu' => $contenu,
-                            'id_user' => $user['id'],
-                            'date' => date("Y-m-d H:i:s")
+                            'id_mail' => $id_mail
+                        ));
+                    } else {
+                        sql("INSERT INTO mails (title, contenu) VALUES (:title, :contenu)", array(
+                            'title' => $sujet,
+                            'contenu' => $contenu
                         ));
                     }
+
+                    $lien = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . URL . 'index.php?email=' . $user['email'] . '&token=' . $token;
+                    $contenu = str_replace('%prenom%', $prenom, $contenu);
+                    $contenu = str_replace('%lien%', $lien, $contenu);
+                    //envoiMail($destinataire, $nom, $sujet, $contenu);
+                    sql("INSERT INTO histo_mails (id_user ,title, contenu,  date) VALUES (:id_user, :title, :contenu, :date)", array(
+                        'title' => $sujet,
+                        'contenu' => $contenu,
+                        'id_user' => $user['id'],
+                        'date' => date("Y-m-d H:i:s")
+                    ));
                 }
                 if ($nb_users > 1) {
                     add_flash($nb_users . " mails ont été envoyés", 'info');
@@ -250,9 +250,9 @@ require_once('../includes/header.php');
         Actions
     </div>
 </div>
-    <?php if ($users->rowCount() > 0) :
-        while ($user = $users->fetch()) : ?>
-<form method="post" class="row mb-3">
+<?php if ($users->rowCount() > 0) :
+    while ($user = $users->fetch()) : ?>
+        <form method="post" class="row mb-3">
             <input type="hidden" name="id" value="<?php echo $user['id'] ?>">
             <div class="col-md-2 mb-3">
                 <input type="text" name="email" class="form-control" value="<?php echo $user['email'] ?>">
@@ -299,13 +299,13 @@ require_once('../includes/header.php');
                     <i class="fa fa-trash"></i>
                 </a>
             </div>
-</form>
-        <?php endwhile ?>
-    <?php else : ?>
-        <div class="mt-4 alert alert-warning">Il n'y a pas encore d'utilisateur</div>
-    <?php endif ?>
-    <hr class="my-3">
-    
+        </form>
+    <?php endwhile ?>
+<?php else : ?>
+    <div class="mt-4 alert alert-warning">Il n'y a pas encore d'utilisateur</div>
+<?php endif ?>
+<hr class="my-3">
+
 <form method="post" class="row mb-3">
     <div class="col-md-2 mb-3">
         <input type="text" id="nv_email" name="nv_email" class="form-control" placeholder="email">
@@ -338,7 +338,7 @@ require_once('../includes/header.php');
     </div>
 </form>
 
-<form method="post" >
+<form method="post">
     <div class="modal fade" tabindex="-1" id="modal_mail">
         <div class="modal-dialog">
             <div class="modal-content">

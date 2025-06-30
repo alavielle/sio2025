@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
           $('#title').val(datas[0].title);
           contenu=datas[0].contenu;
-          contenu=contenu.replace(/<br\s*[\/]?>/gi, "");
+         // contenu=contenu.replace(/<br\s*[\/]?>/gi, "");
           $('#contenu').val(contenu);
         }
       })
